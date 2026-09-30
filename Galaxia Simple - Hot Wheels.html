@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Galaxia Simple - Hot Wheels</title>
+<meta name="description" content="Una galaxia sencilla en azul con agujero negro, anillo brillante y fotos de Hot Wheels flotando entre frases.">
+<link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;%F0%9F%8F%8E%EF%B8%8F&lt;/text&gt;&lt;/svg&gt;">
+<link rel="preconnect" href="https://fonts.googleapis.com/">
+<link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;}
+  html, body { margin:0; height:100%; background:#000; overflow:hidden; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+  canvas { display:block; }
+
+  #main-title{
+    position:fixed;top:40px;left:0;right:0;width:100%;
+    font-size:2.6em;color:#CDEBFF;white-space:nowrap;
+    text-shadow:0 0 10px #0099FF,0 0 18px #00CFFF;
+    z-index:10;pointer-events:none;text-align:center;
+    font-family:'Indie Flower','Bradley Hand','Segoe Script',cursive;
+  }
+  @media (max-width:768px){
+    #main-title{font-size:1.55em;top:22px;white-space:normal;padding:0 10px;line-height:1.15;}
+  }
+
+  #start-screen{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:#000;display:flex;justify-content:center;align-items:center;
+    flex-direction:column;color:#fff;z-index:9999;padding:20px;cursor:pointer;
+    transition:opacity .7s ease,visibility .7s ease;
+  }
+  #start-screen.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+  #start-heart{
+    font-size:clamp(74px,23vmin,148px);line-height:1;display:block;
+    filter:drop-shadow(0 0 14px rgba(0,153,255,.75)) drop-shadow(0 0 36px rgba(0,207,255,.38)) drop-shadow(0 0 66px rgba(30,144,255,.22));
+    animation:latido 1.35s ease-in-out infinite;transform-origin:50% 55%;
+  }
+  @keyframes latido{
+    0%,100%{transform:scale(1);}
+    12%{transform:scale(1.15);}
+    24%{transform:scale(1);}
+    36%{transform:scale(1.07);}
+    50%{transform:scale(1);}
+  }
+  #start-text{
+    font-size:1.8em;color:#CDEBFF;font-family:'Indie Flower','Bradley Hand','Segoe Script',cursive;
+    text-shadow:0 0 7px #0099FF;text-align:center;
+    margin-top:clamp(16px,3.5vh,28px);
+    animation:parpadeo 2.2s ease-in-out infinite;
+  }
+  @keyframes parpadeo{0%,100%{opacity:.55;}50%{opacity:1;}}
+  @media (prefers-reduced-motion:reduce){
+    #start-heart,#start-text{animation:none;}
+  }
+
+  #msg-button{
+    display:none;
+    position:fixed;right:18px;bottom:18px;z-index:1800;
+    width:56px;height:56px;border-radius:50%;
+    background:linear-gradient(135deg,#0d6fc4,#33b5ff);
+    border:none;cursor:pointer;
+    box-shadow:0 0 18px rgba(51,181,255,.6),0 4px 14px rgba(0,0,0,.35);
+    align-items:center;justify-content:center;
+    animation:msgBeat 1.8s ease-in-out infinite;transition:transform .25s ease;
+  }
+  #msg-button:hover{transform:scale(1.08);}
+  @keyframes msgBeat{0%,100%{transform:scale(1);}50%{transform:scale(1.07);}}
+  #msg-button svg{width:24px;height:24px;stroke:#fff;}
+  #msg-overlay{
+    position:fixed;inset:0;z-index:2500;
+    background:rgba(0,10,20,.82);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .4s ease;
+    padding:24px;box-sizing:border-box;
+  }
+  #msg-overlay.visible{opacity:1;pointer-events:auto;}
+  #msg-card{
+    max-width:620px;width:100%;max-height:82vh;overflow-y:auto;
+    background:linear-gradient(160deg,rgba(0,30,55,.96),rgba(0,10,20,.98));
+    border:1px solid rgba(51,181,255,.35);border-radius:22px;
+    padding:40px 32px;box-shadow:0 0 40px rgba(51,181,255,.35);
+    color:#CDEBFF;font-family:'Indie Flower','Bradley Hand','Segoe Script',cursive;
+    transform:translateY(18px) scale(.96);transition:transform .4s ease;
+    position:relative;
+  }
+  #msg-overlay.visible #msg-card{transform:translateY(0) scale(1);}
+  #msg-card h2{
+    text-align:center;margin:0 0 22px;font-size:1.8rem;font-weight:700;
+    color:#CDEBFF;text-shadow:0 0 10px #0099FF,0 0 18px #00CFFF;
+  }
+  #msg-card p{
+    line-height:1.75;font-size:1.1rem;margin:0 0 16px;
+    text-shadow:0 0 8px rgba(0,153,255,.2);
+  }
+  #msg-close{
+    position:absolute;top:14px;right:16px;background:none;border:none;
+    color:#7fd4ff;font-size:1.35rem;cursor:pointer;line-height:1;padding:4px;
+  }
+  #msg-close:hover{color:#fff;}
+  @media (max-width:480px){
+    #msg-button{width:50px;height:50px;bottom:16px;right:16px;}
+    #msg-card{padding:30px 22px;border-radius:18px;}
+    #msg-card h2{font-size:1.5rem;}
+    #msg-card p{font-size:1rem;}
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<h1 id="main-title">Feliz 30 de septiembre </h1>
+
+<div id="start-screen">
+  <div id="start-heart" aria-hidden="true"></div>
+  <div id="start-text">Toca para iniciar</div>
+</div>
+
+<button id="msg-button" type="button" aria-label="Ver mensaje">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+</button>
+<div id="msg-overlay">
+  <div id="msg-card">
+    <button id="msg-close" aria-label="Cerrar mensaje">✕</button>
+    <h2>Para ti 💙</h2>
+    <div id="msg-body"></div>
+  </div>
+</div>
+
+<audio id="audio" loop>
+  <source src="assets/musica.mp3" type="audio/mpeg">
+</audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+const DEFAULTS = {
+  titulo: "Feliz 30 de septiembre ",
+  frases: [
+    " felicidades trolos de mierda","😂😂😂😂",
+    " nosequeponer"," Feliz día para ti"," xddddd"," ja'u burgerking los brothis",
+    " Me alegra conocerte","pasenme sociologia completo nde"," historia tmb pasenme","hendy la situ",
+  ],
+  fotos: ["./supra.png", "./veneno.png", "./zonda.png", "./mclaren.png"],
+  musica: "./Esa Cruz.mp3", 
+  mensaje_texto: "off preeliminar.\n\njajapo remontada mba'e.\n\nhendyyy"
+};
+const CONFIG = DEFAULTS;
+
+const mensajeTexto = (CONFIG.mensaje_texto||'').trim();
+if(mensajeTexto){
+  const msgButton=document.getElementById('msg-button');
+  const msgOverlay=document.getElementById('msg-overlay');
+  const msgClose=document.getElementById('msg-close');
+  const msgBody=document.getElementById('msg-body');
+  mensajeTexto.split(/\n\s*\n/).forEach((paragraph)=>{
+    const p=document.createElement('p');
+    p.textContent=paragraph.trim();
+    msgBody.appendChild(p);
+  });
+  msgButton.style.display='flex';
+  msgButton.addEventListener('click',()=>{msgOverlay.classList.add('visible');});
+  msgClose.addEventListener('click',()=>{msgOverlay.classList.remove('visible');});
+  msgOverlay.addEventListener('click',(e)=>{if(e.target===msgOverlay)msgOverlay.classList.remove('visible');});
+}
+
+document.getElementById('main-title').textContent=CONFIG.titulo;
+const audio=document.getElementById('audio');
+audio.querySelector('source').src=CONFIG.musica;
+audio.load();
+
+const canvas=document.getElementById('c');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.setSize(innerWidth,innerHeight);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,0.1,5000);
+let targetDist=300,currentDist=300,rotX=0.2,rotY=0;
+
+(function makeStars(count=2000,spread=3000){
+  const g=new THREE.BufferGeometry();
+  const pos=new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    const r=spread*(0.3+Math.random()*0.7);
+    const th=Math.random()*Math.PI*2;
+    const ph=Math.acos(2*Math.random()-1);
+    pos[i*3+0]=r*Math.sin(ph)*Math.cos(th);
+    pos[i*3+1]=r*Math.cos(ph);
+    pos[i*3+2]=r*Math.sin(ph)*Math.sin(th);
+  }
+  g.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({size:1.5,color:0xffffff,depthWrite:false})));
+})();
+
+const coreMat=new THREE.MeshPhongMaterial({color:0x030303,transparent:true,opacity:0.92,shininess:30});
+const core=new THREE.Mesh(new THREE.SphereGeometry(40,64,64),coreMat);
+scene.add(core);
+
+const GLOW_BASE=430;
+function makeGlow(size=768,c1='140,210,255',c2='0,153,255'){
+  const c=document.createElement('canvas');c.width=c.height=size;
+  const g=c.getContext('2d');
+  const grad=g.createRadialGradient(size/2,size/2,size*0.05,size/2,size/2,size*0.5);
+  grad.addColorStop(0,'rgba('+c1+',0.78)');
+  grad.addColorStop(0.5,'rgba('+c2+',0.42)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  g.fillStyle=grad;g.fillRect(0,0,size,size);
+  return new THREE.CanvasTexture(c);
+}
+const glow=new THREE.Sprite(new THREE.SpriteMaterial({map:makeGlow(),transparent:true,depthWrite:false}));
+glow.scale.set(GLOW_BASE,GLOW_BASE,1);
+scene.add(glow);
+
+function ringTexture(size=1024){
+  const c=document.createElement('canvas');c.width=c.height=size;
+  const g=c.getContext('2d');g.translate(size/2,size/2);
+  const rInner=size*0.205,rOuter=size*0.49;
+  const grd=g.createRadialGradient(0,0,rInner,0,0,rOuter);
+  grd.addColorStop(0.00,'rgba(240,250,255,1)');
+  grd.addColorStop(0.30,'rgba(120,190,255,1)');
+  grd.addColorStop(0.65,'rgba(40,140,255,0.95)');
+  grd.addColorStop(1.00,'rgba(0,90,220,0.85)');
+  g.fillStyle=grd;
+  g.beginPath();g.arc(0,0,rOuter,0,Math.PI*2);g.arc(0,0,rInner,0,Math.PI*2,true);g.closePath();g.fill();
+
+  const bandCount=26;
+  for(let i=0;i<bandCount;i++){
+    const r=rInner+(rOuter-rInner)*(i/(bandCount-1));
+    const dark=i%3===0;
+    g.beginPath();
+    g.arc(0,0,r,0,Math.PI*2);
+    g.lineWidth=(rOuter-rInner)/bandCount*(0.55+Math.random()*0.35);
+    g.strokeStyle=dark?'rgba(8,20,60,0.20)':'rgba(220,240,255,0.16)';
+    g.stroke();
+  }
+  return new THREE.CanvasTexture(c);
+}
+const ring=new THREE.Mesh(new THREE.RingGeometry(42,116,160),new THREE.MeshBasicMaterial({map:ringTexture(),transparent:true,side:THREE.DoubleSide,blending:THREE.AdditiveBlending,opacity:1}));
+ring.rotation.x=Math.PI/2;
+ring.rotation.z=0.34;
+scene.add(ring);
+
+const frasesBase=(Array.isArray(CONFIG.frases)&&CONFIG.frases.length)?CONFIG.frases:DEFAULTS.frases;
+const WORD_SLOTS=150;
+const WORDS=Array.from({length:WORD_SLOTS},(_,i)=>frasesBase[i%frasesBase.length]);
+function makeTextTexture(text,color){
+  const c=document.createElement('canvas');c.width=512;c.height=128;
+  const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#fff';ctx.shadowColor=color;ctx.shadowBlur=30;
+  const maxWidth=c.width-48;
+  let fontSize=60;
+  ctx.font=fontSize+"px 'Indie Flower', cursive";
+  while(ctx.measureText(text).width>maxWidth&&fontSize>24){
+    fontSize-=2;
+    ctx.font=fontSize+"px 'Indie Flower', cursive";
+  }
+  ctx.fillText(text,c.width/2,c.height/2);
+  return new THREE.CanvasTexture(c);
+}
+const COLORS=['#1E90FF','#00BFFF','#0099FF','#38BDF8','#87CEEB','#4F8CFF','#2563EB','#ADD8E6','#00CFFF','#3B82F6'];
+const textGroup=new THREE.Group();scene.add(textGroup);
+
+document.fonts.load("40px 'Indie Flower'").catch(()=>{}).then(()=>{
+  for(let i=0;i<WORDS.length;i++){
+    const tex=makeTextTexture(WORDS[i],COLORS[i%COLORS.length]);
+    const mat=new THREE.SpriteMaterial({map:tex,transparent:true});
+    const sp=new THREE.Sprite(mat);
+    sp.scale.set(68,21.8,1);
+    const phi=Math.acos(2*Math.random()-1);const theta=Math.random()*Math.PI*2;
+    const r=150+Math.random()*120;
+    sp.position.set(r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
+    sp.userData={phi:phi,theta:theta,radius:r,speed:0.001+Math.random()*0.001};
+    textGroup.add(sp);
+  }
+});
+
+const fotosBase=(Array.isArray(CONFIG.fotos)&&CONFIG.fotos.length)?CONFIG.fotos:DEFAULTS.fotos;
+function makePhotoSprite(url,size){
+  const c=document.createElement('canvas');c.width=c.height=256;
+  const tex=new THREE.CanvasTexture(c);
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true});
+  const sp=new THREE.Sprite(mat);
+  sp.scale.set(size,size,1);
+  const img=new Image();img.crossOrigin='anonymous';
+  img.onload=()=>{
+    const ctx=c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.drawImage(img,0,0,c.width,c.height);
+    tex.needsUpdate=true;
+    const aspect=img.naturalWidth/img.naturalHeight;
+    const aX=Math.min(1,aspect),aY=Math.min(1,1/aspect);
+    sp.scale.set(size*aX,size*aY,1);
+  };
+  img.onerror=()=>{};
+  img.src=url;
+  return sp;
+}
+
+const FOTO_ESCALA=(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)||innerWidth<768)?1.35:1;
+const photoGroup=new THREE.Group();scene.add(photoGroup);
+const PHOTO_COUNT=34;
+for(let i=0;i<PHOTO_COUNT;i++){
+  const url=fotosBase[i%fotosBase.length];
+  const size=(42+Math.random()*30)*FOTO_ESCALA;
+  const sp=makePhotoSprite(url,size);
+  const phi=Math.acos(2*Math.random()-1);const theta=Math.random()*Math.PI*2;
+  const r=140+Math.random()*170;
+  sp.position.set(r*Math.sin(phi)*Math.cos(theta),r*Math.cos(phi),r*Math.sin(phi)*Math.sin(theta));
+  sp.userData={phi:phi,theta:theta,radius:r,speed:0.0006+Math.random()*0.0012};
+  photoGroup.add(sp);
+}
+
+let isPointerDown=false,startX=0,startY=0;
+let targetRotX=0.2,targetRotY=0,velX=0,velY=0;
+function onDown(e){isPointerDown=true;velX=0;velY=0;const t=e.touches?e.touches[0]:e;startX=t.clientX;startY=t.clientY;}
+function onMove(e){
+  if(!isPointerDown)return;
+  if(e.touches&&e.touches.length>1)return;
+  const t=e.touches?e.touches[0]:e;
+  const dx=t.clientX-startX,dy=t.clientY-startY;
+  const sensX=(Math.PI*1.5)/innerWidth,sensY=(Math.PI*0.8)/innerHeight;
+  velY=-dx*sensX;velX=dy*sensY;
+  targetRotY+=velY;targetRotX=Math.max(-1.25,Math.min(1.25,targetRotX+velX));
+  startX=t.clientX;startY=t.clientY;
+}
+function onUp(){isPointerDown=false;}
+addEventListener('mousedown',onDown);addEventListener('mousemove',onMove);addEventListener('mouseup',onUp);
+addEventListener('touchstart',onDown,{passive:true});addEventListener('touchmove',onMove,{passive:true});addEventListener('touchend',onUp,{passive:true});
+addEventListener('wheel',(e)=>{targetDist+=e.deltaY*0.25;targetDist=Math.max(160,Math.min(780,targetDist));},{passive:true});
+
+let pinch=0;
+addEventListener('touchmove',(e)=>{
+  if(e.touches && e.touches.length===2){
+    e.preventDefault();
+    const dx=e.touches[0].clientX-e.touches[1].clientX;
+    const dy=e.touches[0].clientY-e.touches[1].clientY;
+    const d=Math.hypot(dx,dy);
+    if(pinch){targetDist+=(pinch-d)*0.5;targetDist=Math.max(160,Math.min(780,targetDist));}
+    pinch=d;
+  }
+},{passive:false});
+addEventListener('touchend',()=>{pinch=0;},{passive:true});
+
+window.addEventListener('resize', ()=>{
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+let t=0;
+const INERTIA_DECAY=0.88;
+function tick(){
+  requestAnimationFrame(tick);t+=0.01;
+  if(!isPointerDown){
+    velX*=INERTIA_DECAY;velY*=INERTIA_DECAY;
+    targetRotX=Math.max(-1.25,Math.min(1.25,targetRotX+velX));
+    targetRotY+=velY;
+  }
+  rotX+=(targetRotX-rotX)*0.12;
+  rotY+=(targetRotY-rotY)*0.12;
+  ring.rotation.z+=0.003;
+  glow.scale.set(GLOW_BASE*(1+Math.sin(t*0.4)*0.03),GLOW_BASE*(1+Math.sin(t*0.4)*0.03),1);
+  const s=1.0+0.05*Math.sin(t*3);
+  core.scale.set(s,s,s);
+  textGroup.children.forEach(sp=>{
+    sp.material.opacity=0.8+0.2*Math.sin(t*2);
+    sp.userData.theta+=sp.userData.speed;
+    sp.position.x=sp.userData.radius*Math.sin(sp.userData.phi)*Math.cos(sp.userData.theta);
+    sp.position.z=sp.userData.radius*Math.sin(sp.userData.phi)*Math.sin(sp.userData.theta);
+  });
+  photoGroup.children.forEach(sp=>{
+    sp.material.opacity=0.85+0.15*Math.sin(t*2+sp.userData.radius);
+    sp.userData.theta+=sp.userData.speed;
+    sp.position.x=sp.userData.radius*Math.sin(sp.userData.phi)*Math.cos(sp.userData.theta);
+    sp.position.z=sp.userData.radius*Math.sin(sp.userData.phi)*Math.sin(sp.userData.theta);
+  });
+  currentDist+=(targetDist-currentDist)*0.06;
+  const cx=Math.cos(rotX),sx=Math.sin(rotX);const cy=Math.cos(rotY),sy=Math.sin(rotY);
+  camera.position.set(currentDist*sy*cx,currentDist*sx,currentDist*cy*cx);camera.lookAt(0,0,0);
+  renderer.render(scene,camera);
+}
+tick();
+
+const startScreen=document.getElementById('start-screen');
+function startExperience(){
+  startScreen.classList.add('hidden');
+  setTimeout(()=>startScreen.style.display='none',800);
+  audio.play().catch(()=>{});
+}
+startScreen.addEventListener('click',startExperience);
+</script>
+</body>
+</html>
